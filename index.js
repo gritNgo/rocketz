@@ -30,51 +30,6 @@ const bombGrabAreaDOM = document.getElementById("bomb-grab-area");
 newGame();
 
 
-// Event Listeners
-
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  calculateScale();
-  initializeBombPosition();
-  draw();
-});
-
-bombGrabAreaDOM.addEventListener("mousedown", function (e) {
-  if (state.phase === "aiming") {
-    isDragging = true;
-
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    
-    document.body.style.cursor = "grabbing";
-  }
-});
-
-window.addEventListener("mousemove", function (e) {
-  if (isDragging) {
-    let deltaX = e.clientX - dragStartX;
-    let deltaY = e.clientY - dragStartY;
-
-    state.bomb.velocity.x = -deltaX;
-    state.bomb.velocity.y = +deltaY;
-    setInfo(deltaX, deltaY);
-
-    draw();
-  }
-});
-
-window.addEventListener("mouseup", function () {
-  if (isDragging) {
-    isDragging = false;
-
-    document.body.style.cursor = "default";
-    
-    throwBomb();
-  }
-});
-
-
 function newGame() {
   // Initialize game state
   state = {
@@ -293,6 +248,22 @@ function drawCharacterFace() {
 }
 
 function drawBomb() {
+  // Draw throwing trajectory
+  if (state.phase === "aiming") {
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+    ctx.setLineDash([3, 8]);
+    ctx.lineWidth = 3;
+    
+    ctx.beginPath();
+    ctx.moveTo(state.bomb.x, state.bomb.y);
+    ctx.lineTo(
+      state.bomb.x + state.bomb.velocity.x,
+      state.bomb.y + state.bomb.velocity.y
+    );
+    ctx.stroke();
+  }
+
+
   ctx.fillStyle = "white";
   ctx.beginPath();
   ctx.arc(state.bomb.x, state.bomb.y, 6, 0, 2 * Math.PI);
@@ -300,14 +271,95 @@ function drawBomb() {
 }
 
 // Event handlers
-// ...
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  calculateScale();
+  initializeBombPosition();
+  draw();
+});
+
+bombGrabAreaDOM.addEventListener("mousedown", function (e) {
+  if (state.phase === "aiming") {
+    isDragging = true;
+
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    
+    document.body.style.cursor = "grabbing";
+  }
+});
+
+window.addEventListener("mousemove", function (e) {
+  if (isDragging) {
+    let deltaX = e.clientX - dragStartX;
+    let deltaY = e.clientY - dragStartY;
+
+    state.bomb.velocity.x = -deltaX;
+    state.bomb.velocity.y = +deltaY;
+    setInfo(deltaX, deltaY);
+
+    draw();
+  }
+});
+
+window.addEventListener("mouseup", function () {
+  if (isDragging) {
+    isDragging = false;
+
+    document.body.style.cursor = "default";
+    
+    throwBomb();
+  }
+});
+
+let previousAnimationTimestamp = undefined; 
 
 function throwBomb() {
-  // ...
+  state.phase = "in flight";
+  previousAnimationTimestamp = undefined;
+  requestAnimationFrame(animate);
+}
+
+function moveBomb(elapsedTime) {
+  const multiplier = elapsedTime / 200; // Adjust trajectory by gravity
+
+  state.bomb.velocity.y -= 20 * multiplier; // Calculate new position
+  
+  state.bomb.x += state.bomb.velocity.x * multiplier;
+  state.bomb.y += state.bomb.velocity.y * multiplier;
 }
 
 function animate(timestamp) {
-  // ...
+  if (previousAnimationTimestamp === undefined) {
+    previousAnimationTimestamp = timestamp;
+    requestAnimationFrame(animate);
+    return;
+  }
+  const elapsedTime = timestamp - previousAnimationTimestamp;
+
+  moveBomb(elapsedTime); 
+  
+  // Hit detection
+  let miss = false; // Bomb hit a building or got out of the screen
+  let hit = false; // Bomb hit the enemy
+
+  // Handle the case when we hit a building or the bomb got off-screen
+  if (miss) {
+    // ...
+    return;
+  } // Handle the case when we hit the enemy
+  if (hit) {
+    // ... 
+    return;
+  }
+
+  draw();
+  
+  // Continue the animation loop
+  previousAnimationTimestamp = timestamp;
+  requestAnimationFrame(animate);
 }
 
 
