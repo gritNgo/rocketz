@@ -10,7 +10,7 @@ const ctx = canvas.getContext("2d");
 
 newGame();
 
-// Add Godzilla
+// *******      ADD GODZILLA!!!!!!!       *********
 
 function newGame() {
   // Initialize game state
@@ -24,6 +24,8 @@ function newGame() {
     },
     buildings: generateBuildings(),
   };
+
+  calculateScale();
 
   initializeBombPosition();
 
@@ -51,16 +53,37 @@ function generateBuildings() {
     const maxHeightCharacter = 150;
 
     const height = platformWithCharacter
-      ? minHeightCharacter + Math.random() * (maxHeightCharacter - minHeightCharacter)
+      ? minHeightCharacter +
+        Math.random() * (maxHeightCharacter - minHeightCharacter)
       : minHeight + Math.random() * (maxHeight - minHeight);
 
     buildings.push({ x, width, height });
   }
   return buildings;
 }
+function calculateScale() {
+  const lastBuilding = state.buildings.at(-1);
+  const totalWidthOfTheCity = lastBuilding.x + lastBuilding.width;
+
+  state.scale = window.innerWidth / totalWidthOfTheCity;
+}
 
 function initializeBombPosition() {
-  // ...
+  const building =
+    state.currentPlayer === 1
+      ? state.buildings.at(1) // Second building
+      : state.buildings.at(-2); // Second last building
+
+  const characterX = building.x + building.width / 2;
+  const characterY = building.height;
+
+  const characterHandOffsetX = state.currentPlayer === 1 ? -28 : 28;
+  const characterHandOffsetY = 107;
+
+  state.bomb.x = characterX + characterHandOffsetX;
+  state.bomb.y = characterY + characterHandOffsetY;
+  state.bomb.velocity.x = 0;
+  state.bomb.velocity.y = 0;
 }
 
 function draw() {
@@ -68,6 +91,7 @@ function draw() {
   // Flip coordinate system upside down
   ctx.translate(0, window.innerHeight);
   ctx.scale(1, -1);
+  ctx.scale(state.scale, state.scale);
 
   // Draw scene
   drawBackground();
@@ -83,7 +107,12 @@ function draw() {
 function drawBackground() {
   ctx.fillStyle = "gray";
 
-  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  ctx.fillRect(
+    0,
+    0,
+    window.innerWidth / state.scale,
+    window.innerHeight / state.scale
+  );
 }
 
 function drawBuildings() {
@@ -106,31 +135,31 @@ function drawCharacter(player) {
   drawCharacterLeftArm(player);
   drawCharacterRightArm(player);
   drawCharacterFace();
-  
+
   ctx.restore();
 }
 
 function drawCharacterBody() {
   ctx.fillStyle = "black";
-    
-  ctx.beginPath(); 
-  
+
+  ctx.beginPath();
+
   // Starting Position
-  ctx.moveTo(0, 15); 
-    
+  ctx.moveTo(0, 15);
+
   // Left Leg
   ctx.lineTo(-7, 0);
-  ctx.lineTo(-20, 0); 
-    
+  ctx.lineTo(-20, 0);
+
   // Main Body
   ctx.lineTo(-13, 77);
   ctx.lineTo(0, 84);
-  ctx.lineTo(13, 77); 
-  
+  ctx.lineTo(13, 77);
+
   // Right Leg
   ctx.lineTo(20, 0);
   ctx.lineTo(7, 0);
-  
+
   ctx.fill();
 }
 
@@ -149,7 +178,7 @@ function drawCharacterLeftArm(player) {
   } else {
     ctx.quadraticCurveTo(-44, 45, -28, 12);
   }
-  
+
   ctx.stroke();
 }
 
@@ -168,14 +197,14 @@ function drawCharacterRightArm(player) {
   } else {
     ctx.quadraticCurveTo(+44, 45, +28, 12);
   }
-  
+
   ctx.stroke();
 }
 
 function drawCharacterFace() {
   ctx.strokeStyle = "lightblue";
   ctx.lineWidth = 3;
-  
+
   ctx.beginPath();
 
   // Left Eye
@@ -193,9 +222,11 @@ function drawCharacterFace() {
   ctx.stroke();
 }
 
-
 function drawBomb() {
-  // ...
+  ctx.fillStyle = "white";
+  ctx.beginPath();
+  ctx.arc(state.bomb.x, state.bomb.y, 6, 0, 2 * Math.PI);
+  ctx.fill();
 }
 
 // Event handlers
