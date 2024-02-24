@@ -1,16 +1,79 @@
+// *******      ADD GODZILLA in backgruond!!!!!!!  (and moon)     *********
+
 // The state of the game
 let state = {};
 
-// References to HTML elements
+// drag variables
+let isDragging = false;
+let dragStartX = undefined;
+let dragStartY = undefined;
+
+// DOM variables
 // The canvas element and its drawing context
 const canvas = document.getElementById("game");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const ctx = canvas.getContext("2d");
 
+// Left info panel
+const angleInfo1 = document.querySelector("#info-left .angle");
+const velocityInfo1 = document.querySelector("#info-left .velocity");
+
+// Right info panel
+const angleInfo2 = document.querySelector("#info-right .angle");
+const velocityInfo2 = document.querySelector("#info-right .velocity");
+
+// The bomb's grab area 
+const bombGrabAreaDOM = document.getElementById("bomb-grab-area");
+
+
 newGame();
 
-// *******      ADD GODZILLA!!!!!!!       *********
+
+// Event Listeners
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  calculateScale();
+  initializeBombPosition();
+  draw();
+});
+
+bombGrabAreaDOM.addEventListener("mousedown", function (e) {
+  if (state.phase === "aiming") {
+    isDragging = true;
+
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    
+    document.body.style.cursor = "grabbing";
+  }
+});
+
+window.addEventListener("mousemove", function (e) {
+  if (isDragging) {
+    let deltaX = e.clientX - dragStartX;
+    let deltaY = e.clientY - dragStartY;
+
+    state.bomb.velocity.x = -deltaX;
+    state.bomb.velocity.y = +deltaY;
+    setInfo(deltaX, deltaY);
+
+    draw();
+  }
+});
+
+window.addEventListener("mouseup", function () {
+  if (isDragging) {
+    isDragging = false;
+
+    document.body.style.cursor = "default";
+    
+    throwBomb();
+  }
+});
+
 
 function newGame() {
   // Initialize game state
@@ -84,6 +147,13 @@ function initializeBombPosition() {
   state.bomb.y = characterY + characterHandOffsetY;
   state.bomb.velocity.x = 0;
   state.bomb.velocity.y = 0;
+
+  // Initialize the position of the grab area in HTML
+  const grabAreaRadius = 15;
+  const left = state.bomb.x * state.scale - grabAreaRadius;
+  const bottom = state.bomb.y * state.scale - grabAreaRadius;
+  bombGrabAreaDOM.style.left = `${left}px`;
+  bombGrabAreaDOM.style.bottom = `${bottom}px`;
 }
 
 function draw() {
@@ -238,4 +308,19 @@ function throwBomb() {
 
 function animate(timestamp) {
   // ...
+}
+
+
+function setInfo(deltaX, deltaY) {
+  const hypotenuse = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+  const angleInRadians = Math.asin(deltaY / hypotenuse);
+  const angleInDegrees = (angleInRadians / Math.PI) * 180;
+  
+  if (state.currentPlayer === 1) {
+    angleInfo1.innerText = Math.round(angleInDegrees);
+    velocityInfo1.innerText = Math.round(hypotenuse);
+  } else {
+    angleInfo2.innerText = Math.round(angleInDegrees);
+    velocityInfo2.innerText = Math.round(hypotenuse);
+  }
 }
