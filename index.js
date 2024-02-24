@@ -10,6 +10,8 @@ const ctx = canvas.getContext("2d");
 
 newGame();
 
+// Add Godzilla
+
 function newGame() {
   // Initialize game state
   state = {
@@ -92,8 +94,105 @@ function drawBuildings() {
 }
 
 function drawCharacter(player) {
-  // ...
+  ctx.save();
+  const building =
+    player === 1
+      ? state.buildings.at(1) // Second building
+      : state.buildings.at(-2); // Second last building
+
+  ctx.translate(building.x + building.width / 2, building.height);
+
+  drawCharacterBody();
+  drawCharacterLeftArm(player);
+  drawCharacterRightArm(player);
+  drawCharacterFace();
+  
+  ctx.restore();
 }
+
+function drawCharacterBody() {
+  ctx.fillStyle = "black";
+    
+  ctx.beginPath(); 
+  
+  // Starting Position
+  ctx.moveTo(0, 15); 
+    
+  // Left Leg
+  ctx.lineTo(-7, 0);
+  ctx.lineTo(-20, 0); 
+    
+  // Main Body
+  ctx.lineTo(-13, 77);
+  ctx.lineTo(0, 84);
+  ctx.lineTo(13, 77); 
+  
+  // Right Leg
+  ctx.lineTo(20, 0);
+  ctx.lineTo(7, 0);
+  
+  ctx.fill();
+}
+
+function drawCharacterLeftArm(player) {
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 18;
+
+  ctx.beginPath();
+  ctx.moveTo(-13, 50);
+
+  if (
+    (state.phase === "aiming" && state.currentPlayer === 1 && player === 1) ||
+    (state.phase === "celebrating" && state.currentPlayer === player)
+  ) {
+    ctx.quadraticCurveTo(-44, 63, -28, 107);
+  } else {
+    ctx.quadraticCurveTo(-44, 45, -28, 12);
+  }
+  
+  ctx.stroke();
+}
+
+function drawCharacterRightArm(player) {
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 18;
+
+  ctx.beginPath();
+  ctx.moveTo(+13, 50);
+
+  if (
+    (state.phase === "aiming" && state.currentPlayer === 2 && player === 2) ||
+    (state.phase === "celebrating" && state.currentPlayer === player)
+  ) {
+    ctx.quadraticCurveTo(+44, 63, +28, 107);
+  } else {
+    ctx.quadraticCurveTo(+44, 45, +28, 12);
+  }
+  
+  ctx.stroke();
+}
+
+function drawCharacterFace() {
+  ctx.strokeStyle = "lightblue";
+  ctx.lineWidth = 3;
+  
+  ctx.beginPath();
+
+  // Left Eye
+  ctx.moveTo(-5, 70);
+  ctx.lineTo(-2, 70);
+
+  // Right Eye
+  ctx.moveTo(2, 70);
+  ctx.lineTo(5, 70);
+
+  // Mouth
+  ctx.moveTo(-5, 62);
+  ctx.lineTo(5, 62);
+
+  ctx.stroke();
+}
+
 
 function drawBomb() {
   // ...
